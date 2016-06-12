@@ -5,6 +5,7 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.support.multidex.MultiDex;
 
@@ -15,6 +16,8 @@ public class CustomApplication extends Application {
     private static Context context;
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
+    public static final String MyPREFERENCES = "LayoutPrefs" ;
+    public static SharedPreferences sharedPreferences;
 
     public static Context getContext() {
         return context;
@@ -24,6 +27,7 @@ public class CustomApplication extends Application {
     public void onCreate() {
         super.onCreate();
         MultiDex.install(this);
+        sharedPreferences= getSharedPreferences(MyPREFERENCES,MODE_PRIVATE);
         context = getApplicationContext();
         alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, AlarmReceiver.class);
