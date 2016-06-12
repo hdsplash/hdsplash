@@ -1,0 +1,29 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.2'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url 'http://guardian.github.com/maven/repo-releases' }
+        maven { url "https://jitpack.io" }
+    }
+    configurations.all((Closure) {
+        resolutionStrategy {
+            force 'com.android.support:support-v4:23.1.1'
+            // your version of support library
+        }
+    })
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.8'
+}
