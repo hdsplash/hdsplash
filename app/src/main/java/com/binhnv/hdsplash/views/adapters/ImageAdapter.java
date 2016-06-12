@@ -17,10 +17,12 @@ import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.binhnv.hdsplash.CountCategory;
+import com.binhnv.hdsplash.CustomApplication;
 import com.binhnv.hdsplash.OnItemClickListener;
 import com.binhnv.hdsplash.R;
 import com.binhnv.hdsplash.models.MyImage;
@@ -292,6 +294,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
         //device.width ... device
         //int finalHeight = (int) (displaymetrics.widthPixels / (currentImage.getRatio() < 1 ? 1 : currentImage.getRatio()));
         int finalHeight = (int) (displaymetrics.widthPixels * currentImage.getHeight() / currentImage.getWidth());
+        int layoutType= CustomApplication.sharedPreferences.getInt("LayoutType", 0);
+        finalHeight= (layoutType ==0) ? finalHeight/2 : finalHeight ;
         imagesViewHolder.imageView.setMinimumHeight(finalHeight);
 
     }
@@ -315,10 +319,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
 
 class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    protected final FrameLayout imageTextContainer;
+    protected final LinearLayout imageTextContainer;
     protected final ImageView imageView;
     protected final TextView imageAuthor;
-    protected final TextView imageDate;
+   // protected final TextView imageDate;
     private final OnItemClickListener onItemClickListener;
     protected final RelativeLayout imageLoveContainer;
     protected final IconicsImageView imageLovedYes;
@@ -329,10 +333,10 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         super(itemView);
         this.onItemClickListener = onItemClickListener;
 
-        imageTextContainer = (FrameLayout) itemView.findViewById(R.id.item_image_text_container);
+        imageTextContainer = (LinearLayout) itemView.findViewById(R.id.item_image_text_container);
         imageView = (ImageView) itemView.findViewById(R.id.item_image_img);
         imageAuthor = (TextView) itemView.findViewById(R.id.item_image_author);
-        imageDate = (TextView) itemView.findViewById(R.id.item_image_date);
+        //imageDate = (TextView) itemView.findViewById(R.id.item_image_date);
         imageLoveContainer = (RelativeLayout) itemView.findViewById(R.id.item_image_loved_container);
         imageLovedYes = (IconicsImageView) itemView.findViewById(R.id.item_image_loved_yes);
         imageLovedNo = (IconicsImageView) itemView.findViewById(R.id.item_image_loved_no);

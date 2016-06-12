@@ -3,9 +3,11 @@ package com.binhnv.hdsplash.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -31,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.binhnv.hdsplash.CustomApplication;
 import com.binhnv.hdsplash.OnItemClickListener;
 import com.binhnv.hdsplash.R;
 import com.binhnv.hdsplash.activities.DetailActivity;
@@ -66,8 +69,12 @@ public class ImagesFragment extends Fragment {
     private ErrorView mImagesErrorView;
     private DatabaseAccess databaseAccess;
     private SwipeRefreshLayout mRefreshLayout;
+    RecyclerView.LayoutManager layoutManager;
     GridLayoutManager gridLayoutManager;
+    StaggeredGridLayoutManager staggeredGridLayoutManager;
+
     private FloatingActionButton fab;
+    private int layoutType;
     private int imagesNum;
     private  int allFilter;
     private int currentFilter;
@@ -142,6 +149,12 @@ public class ImagesFragment extends Fragment {
         }
 
         //showAll();
+        staggeredGridLayoutManager= new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
+        gridLayoutManager =  new CustomGridLayoutManager(getActivity(), 1);
+        //gridLayoutManager = new GridLayoutManager(getActivity(), 1);
+
+        // sharedPreferences= getActivity().getSharedPreferences(MyPREFERENCES,getActivity().MODE_PRIVATE);
+        layoutType= CustomApplication.sharedPreferences.getInt(getString(R.string.layout_type), 0);
         super.onCreate(savedInstanceState);
     }
 
@@ -163,8 +176,13 @@ public class ImagesFragment extends Fragment {
             }
         });
 
-        gridLayoutManager = new CustomGridLayoutManager(getActivity(), 1);
-        mImageRecycler.setLayoutManager(gridLayoutManager);
+        //gridLayoutManager = new CustomGridLayoutManager(getActivity(), 1);
+        layoutManager= (layoutType == 1) ? gridLayoutManager : staggeredGridLayoutManager;
+        mImageRecycler.setLayoutManager(layoutManager);
+
+        SpacesItemDecoration decoration = new SpacesItemDecoration(5);
+        mImageRecycler.addItemDecoration(decoration);
+       // mImageRecycler.setLayoutManager(gridLayoutManager);
         //mImageRecycler.addItemDecoration(new RecyclerInsetsDecoration(getActivity()));
         mImageRecycler.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -180,13 +198,13 @@ public class ImagesFragment extends Fragment {
             }
         });
 
-        mImages = databaseAccess.getImagesFromDb();
-        mImageAdapter = new ImageAdapter(getActivity());
-        updateAdapter(mImages);
 
+        mImageAdapter = new ImageAdapter(getActivity());
         mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
         mImageRecycler.setAdapter(mImageAdapter);
 
+        mImages = databaseAccess.getImagesFromDb();
+        updateAdapter(mImages);
         //showAll(MainActivity.Category.ALL.id);
         showAll(currentFilter);
 
@@ -367,7 +385,7 @@ public class ImagesFragment extends Fragment {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
 
-            mRefreshLayout.setEnabled(gridLayoutManager.findFirstCompletelyVisibleItemPosition() == 0);
+            //mRefreshLayout.setEnabled(gridLayoutManager.findFirstCompletelyVisibleItemPosition() == 0);
             /*super.onScrolled(recyclerView, dx, dy);
             // toolbar = (Toolbar) getActivity().findViewById(R.id.activity_main_toolbar);
 
@@ -413,6 +431,14 @@ public class ImagesFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
+        if(id == R.id.layout){
+            layoutType= (layoutType ==1) ? 0 : 1 ;
+            SharedPreferences.Editor editor = CustomApplication.sharedPreferences.edit();
+            editor.putInt(getString(R.string.layout_type), layoutType).commit();
+            layoutManager= (layoutType == 1) ? gridLayoutManager : staggeredGridLayoutManager;
+            mImageRecycler.setLayoutManager(layoutManager);
+        }
+
         if (id == com.binhnv.hdsplash.R.id.action_shuffle) {
             if (mImages != null) {
                 //we don't want to shuffle the original list
@@ -450,5 +476,21 @@ public class ImagesFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         Log.d("frag", "onDestroy");
+    }
+
+    public class SpacesItemDecoration extends RecyclerView.ItemDecoration {
+        private final int mSpace;
+        public SpacesItemDecoration(int space) {
+            this.mSpace = space;
+        }
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            outRect.left = mSpace;
+            outRect.right = mSpace;
+            outRect.bottom = mSpace;
+            // Add top margin only for the first item to avoid double space between items
+            if (parent.getChildAdapterPosition(view) == 0)
+                outRect.top = mSpace;
+        }
     }
 }

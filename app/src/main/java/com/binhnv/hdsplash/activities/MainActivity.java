@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity  implements CountCategory{
 
        // menu.findItem(R.id.action_open_source).setIcon(new IconicsDrawable(this, FontAwesome.Icon.faw_space_shuttle).color(R.color.icon_color).actionBar());
         //menu.findItem(R.id.action_shuffle).setIcon(new IconicsDrawable(this, MaterialDesignIconic.Icon.gmi_shuffle).paddingDp(1).color(Color.WHITE).actionBar());
+        menu.findItem(R.id.layout).setIcon(R.drawable.grid96_layout);
         menu.findItem(R.id.action_shuffle).setIcon(R.drawable.shuffle_4);
         menu.findItem(R.id.action_help).setIcon(R.drawable.info);
 

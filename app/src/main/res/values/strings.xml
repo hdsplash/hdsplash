@@ -5,6 +5,8 @@
     <string name="action_open_source">Open Source</string>
     <string name="action_shuffle">Shuffle</string>
     <string name="action_help">Tutorial</string>
+    <string name="layout_type">LayoutType</string>
+    <string name="action_change_layout">Layout</string>
 
     <!-- categories -->
     <string name="category_all">All</string>
