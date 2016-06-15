@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.binhnv.hdsplash.CountCategory;
+import com.binhnv.hdsplash.CustomApplication;
 import com.binhnv.hdsplash.R;
 import com.binhnv.hdsplash.fragments.ImagesFragment;
 import com.binhnv.hdsplash.models.MyImage;
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity  implements CountCategory{
                         new PrimaryDrawerItem().withName(R.string.category_nature).withIdentifier(Category.NATURE.id).withIcon(R.drawable.nature),
                         new PrimaryDrawerItem().withName(R.string.category_objects).withIdentifier(Category.OBJECTS.id).withIcon(R.drawable.object),
                         new PrimaryDrawerItem().withName(R.string.category_people).withIdentifier(Category.PEOPLE.id).withIcon(R.drawable.people),
-                        new PrimaryDrawerItem().withName(R.string.category_technology).withIdentifier(Category.TECHNOLOGY.id).withIcon(R.drawable.tech1)
+                        new PrimaryDrawerItem().withName(R.string.category_technology).withIdentifier(Category.TECHNOLOGY.id).withIcon(R.drawable.tech)
                 )
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
 
@@ -144,9 +145,16 @@ public class MainActivity extends AppCompatActivity  implements CountCategory{
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
-       // menu.findItem(R.id.action_open_source).setIcon(new IconicsDrawable(this, FontAwesome.Icon.faw_space_shuttle).color(R.color.icon_color).actionBar());
+        // menu.findItem(R.id.action_open_source).setIcon(new IconicsDrawable(this, FontAwesome.Icon.faw_space_shuttle).color(R.color.icon_color).actionBar());
         //menu.findItem(R.id.action_shuffle).setIcon(new IconicsDrawable(this, MaterialDesignIconic.Icon.gmi_shuffle).paddingDp(1).color(Color.WHITE).actionBar());
-        menu.findItem(R.id.layout).setIcon(R.drawable.grid96_layout);
+        int layoutType= CustomApplication.sharedPreferences.getInt("LayoutType", 1);
+        if (layoutType==0){
+            menu.findItem(R.id.layout).setIcon(R.drawable.list96);
+        }
+        else
+        {
+            menu.findItem(R.id.layout).setIcon(R.drawable.ster96);
+        }
         menu.findItem(R.id.action_shuffle).setIcon(R.drawable.shuffle_4);
         menu.findItem(R.id.action_help).setIcon(R.drawable.info);
 

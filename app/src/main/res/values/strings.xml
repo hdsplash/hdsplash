@@ -86,4 +86,6 @@
         <item >Great! More than 12000 HD photos, and daily updated</item>
         <item >Easily download, share or set photos as wallpaper</item>
     </string-array>
+
+    <string name="ad_unit_id">ca-app-pub-8513491032038463/6285268034</string>
 </resources>

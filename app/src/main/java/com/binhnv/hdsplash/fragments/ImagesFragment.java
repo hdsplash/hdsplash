@@ -29,10 +29,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.binhnv.hdsplash.AppInstallAdFetcher;
+import com.binhnv.hdsplash.AppInstallAdPlacement;
 import com.binhnv.hdsplash.CustomApplication;
 import com.binhnv.hdsplash.OnItemClickListener;
 import com.binhnv.hdsplash.R;
@@ -45,7 +48,10 @@ import com.binhnv.hdsplash.views.adapters.ImageAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
+import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter;
+import jp.wasabeef.recyclerview.animators.FadeInAnimator;
 import rx.Observable;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
@@ -56,6 +62,8 @@ import tr.xip.errorview.ErrorView;
 public class ImagesFragment extends Fragment {
 
     private static final String TAG = "ImagesFragment";
+    //private static final String APP_INSTALL_AD_UNIT_ID = "ca-app-pub-8513491032038463/6285268034";
+    private static final String APP_INSTALL_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110";
     public static SparseArray<Bitmap> photoCache = new SparseArray<>(1);
 
     private MyApi mApi = new MyApi();
@@ -63,6 +71,7 @@ public class ImagesFragment extends Fragment {
 
     private ImageAdapter mImageAdapter;
     private ArrayList<MyImage> mImages;
+    ArrayList<Object> rowItems;
     private ArrayList<MyImage> mCurrentImages;
     private RecyclerView mImageRecycler;
     private ProgressBar mImagesProgress;
@@ -123,7 +132,7 @@ public class ImagesFragment extends Fragment {
         Log.d("frag", "onCreate");
         setHasOptionsMenu(true);
         databaseAccess = DatabaseAccess.getInstance(getActivity());
-        imagesNum= databaseAccess.getImagesFromDb().size();
+
         currentFilter=  MainActivity.Category.ALL.id;
         //mImages = databaseAccess.getImagesFromDb();
         if (ImagesFragment.this.getActivity() instanceof MainActivity) {
@@ -182,7 +191,7 @@ public class ImagesFragment extends Fragment {
 
         SpacesItemDecoration decoration = new SpacesItemDecoration(5);
         mImageRecycler.addItemDecoration(decoration);
-       // mImageRecycler.setLayoutManager(gridLayoutManager);
+        // mImageRecycler.setLayoutManager(gridLayoutManager);
         //mImageRecycler.addItemDecoration(new RecyclerInsetsDecoration(getActivity()));
         mImageRecycler.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -198,15 +207,22 @@ public class ImagesFragment extends Fragment {
             }
         });
 
-
-        mImageAdapter = new ImageAdapter(getActivity());
+        //getRowItems();
+        rowItems = new ArrayList<Object>();
+        mImageAdapter = new ImageAdapter(getActivity()/*, getRowItems()*/);
         mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
-        mImageRecycler.setAdapter(mImageAdapter);
 
-        mImages = databaseAccess.getImagesFromDb();
-        updateAdapter(mImages);
-        //showAll(MainActivity.Category.ALL.id);
-        showAll(currentFilter);
+        mImageRecycler.setItemAnimator(new FadeInAnimator());
+        ScaleInAnimationAdapter alphaAdapter = new ScaleInAnimationAdapter(mImageAdapter);
+        alphaAdapter.setFirstOnly(true);
+        alphaAdapter.setDuration(500);
+        alphaAdapter.setInterpolator(new OvershootInterpolator(.5f));
+
+        mImageRecycler.setAdapter(alphaAdapter);
+
+        new LoadImageFromDb().execute();
+
+        //showAll(currentFilter);
 
         mImageRecycler.setOnScrollListener(recyclerScrollListener);
         return rootView;
@@ -219,6 +235,14 @@ public class ImagesFragment extends Fragment {
         if (mImages != null) {
             Log.d("frag", "onResume - " + mImages.size());
         }
+    }
+
+    private List<Object> getRowItems(){
+
+
+        //new LoadImageFromDb().execute();
+
+        return rowItems;
     }
 
     private void showAll(int cate) {
@@ -247,7 +271,7 @@ public class ImagesFragment extends Fragment {
     }
 
 
-    /*class LoadImageFromDb extends AsyncTask<Void, Void, ArrayList<MyImage>> {
+    class LoadImageFromDb extends AsyncTask<Void, Void, ArrayList<MyImage>> {
 
         @Override
         protected void onPreExecute() {
@@ -256,20 +280,24 @@ public class ImagesFragment extends Fragment {
 
         @Override
         protected void onPostExecute(ArrayList<MyImage> images) {
-            mImagesProgress.setVisibility(View.GONE);
-            mImageRecycler.setVisibility(View.VISIBLE);
-            //mImagesErrorView.setVisibility(View.GONE);
             mImages = images;
+            imagesNum= mImages.size();
+            /*for(MyImage image: mImages){
+                rowItems.add(image);
+            }
+            for(int i = 1; i < mImages.size()/5; i++) {
+                rowItems.add(i * 5, new AppInstallAdPlacement(new AppInstallAdFetcher(APP_INSTALL_AD_UNIT_ID)));
+            }*/
+            //updateAdapterAll(rowItems);
             updateAdapter(mImages);
-            Log.d(TAG, "onPostExcute");
+            showAll(currentFilter);
         }
 
         @Override
         protected ArrayList<MyImage> doInBackground(Void... params) {
-            //databaseAccess.open();
             return databaseAccess.getImagesFromDb();
         }
-    }*/
+    }
 
     private void showFeatured() {
 
@@ -295,7 +323,9 @@ public class ImagesFragment extends Fragment {
 
         @Override
         public void onCompleted() {
+            //TODO: chuyen vao thread con
             mImages = databaseAccess.getImagesFromDb();
+            //new LoadImageFromDb().execute();
             int imagesUpNum= mImages.size() - imagesNum;
             imagesNum= mImages.size();
             toolbar = (Toolbar) getActivity().findViewById(R.id.activity_main_toolbar);
@@ -309,6 +339,7 @@ public class ImagesFragment extends Fragment {
                     updateAdapter(mImages);
                 else
                     updateAdapter(mApi.filterCategory(mImages, allFilter));
+                //updateAdapterAll(rowItems);
                 mImageRecycler.smoothScrollToPosition(0);
             }
 
@@ -316,7 +347,7 @@ public class ImagesFragment extends Fragment {
                 ((MainActivity) ImagesFragment.this.getActivity()).setCategoryCount(mImages);
             }
             mRefreshLayout.setRefreshing(false);
-            Toast toast=  Toast.makeText(getActivity(), text, Toast.LENGTH_LONG);
+            Toast toast=  Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT);
             toast.setGravity(Gravity.TOP, 0, toolbar.getHeight()+20);
             toast.show();
         }
@@ -341,38 +372,40 @@ public class ImagesFragment extends Fragment {
 
         @Override
         public void onClick(View v, int position) {
+            Object rowData = rowItems.get(position);
+            if(rowData instanceof MyImage) {
+                MyImage selectedImage = (MyImage)rowData;
 
-            MyImage selectedImage = mCurrentImages.get(position);
+                Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+                detailIntent.putExtra("position", position);
+                detailIntent.putExtra("selected_image", selectedImage);
 
-            Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
-            detailIntent.putExtra("position", position);
-            detailIntent.putExtra("selected_image", selectedImage);
-
-            if (selectedImage.getSwatch() != null) {
-                detailIntent.putExtra("swatch_title_text_color", selectedImage.getSwatch().getTitleTextColor());
-                detailIntent.putExtra("swatch_rgb", selectedImage.getSwatch().getRgb());
-            }
-
-            ImageView coverImage = (ImageView) v.findViewById(com.binhnv.hdsplash.R.id.item_image_img);
-            if (coverImage == null) {
-                coverImage = (ImageView) ((View) v.getParent()).findViewById(com.binhnv.hdsplash.R.id.item_image_img);
-            }
-
-            if (Build.VERSION.SDK_INT >= 21) {
-                if (coverImage.getParent() != null) {
-                    ((ViewGroup) coverImage.getParent()).setTransitionGroup(false);
+                if (selectedImage.getSwatch() != null) {
+                    detailIntent.putExtra("swatch_title_text_color", selectedImage.getSwatch().getTitleTextColor());
+                    detailIntent.putExtra("swatch_rgb", selectedImage.getSwatch().getRgb());
                 }
-            }
 
-            if (coverImage != null && coverImage.getDrawable() != null) {
-                Bitmap bitmap = ((BitmapDrawable) coverImage.getDrawable()).getBitmap(); //ew
-                if (bitmap != null && !bitmap.isRecycled()) {
-                    photoCache.put(position, bitmap);
+                ImageView coverImage = (ImageView) v.findViewById(com.binhnv.hdsplash.R.id.item_image_img);
+                if (coverImage == null) {
+                    coverImage = (ImageView) ((View) v.getParent()).findViewById(com.binhnv.hdsplash.R.id.item_image_img);
+                }
 
-                    // Setup the transition to the detail activity
-                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(getActivity(), coverImage, "cover");
+                if (Build.VERSION.SDK_INT >= 21) {
+                    if (coverImage.getParent() != null) {
+                        ((ViewGroup) coverImage.getParent()).setTransitionGroup(false);
+                    }
+                }
 
-                    startActivity(detailIntent, options.toBundle());
+                if (coverImage != null && coverImage.getDrawable() != null) {
+                    Bitmap bitmap = ((BitmapDrawable) coverImage.getDrawable()).getBitmap(); //ew
+                    if (bitmap != null && !bitmap.isRecycled()) {
+                        photoCache.put(position, bitmap);
+
+                        // Setup the transition to the detail activity
+                        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(getActivity(), coverImage, "cover");
+
+                        startActivity(detailIntent, options.toBundle());
+                    }
                 }
             }
         }
@@ -437,6 +470,10 @@ public class ImagesFragment extends Fragment {
             editor.putInt(getString(R.string.layout_type), layoutType).commit();
             layoutManager= (layoutType == 1) ? gridLayoutManager : staggeredGridLayoutManager;
             mImageRecycler.setLayoutManager(layoutManager);
+            if (layoutType == 0)
+                item.setIcon(R.drawable.list96);
+            else
+                item.setIcon(R.drawable.ster96);
         }
 
         if (id == com.binhnv.hdsplash.R.id.action_shuffle) {
@@ -458,10 +495,16 @@ public class ImagesFragment extends Fragment {
      * @param images
      */
     private void updateAdapter(final ArrayList<MyImage> images) {
-        mCurrentImages = images;
-        mImageAdapter.updateData(mCurrentImages);
-        //mImageRecycler.scrollToPosition(0);
+        rowItems.clear();
+        for(MyImage image: images){
+            rowItems.add(image);
+        }
+        for(int i = 1; i < images.size()/5; i++) {
+            rowItems.add(i * 5, new AppInstallAdPlacement(new AppInstallAdFetcher(APP_INSTALL_AD_UNIT_ID)));
+        }
+        mImageAdapter.updateAll(rowItems);
     }
+
 
     @Override
     public void onDestroyView() {
@@ -488,7 +531,6 @@ public class ImagesFragment extends Fragment {
             outRect.left = mSpace;
             outRect.right = mSpace;
             outRect.bottom = mSpace;
-            // Add top margin only for the first item to avoid double space between items
             if (parent.getChildAdapterPosition(view) == 0)
                 outRect.top = mSpace;
         }

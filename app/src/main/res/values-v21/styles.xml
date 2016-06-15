@@ -7,6 +7,12 @@
         <item name="android:windowAllowReturnTransitionOverlap">true</item>
         <item name="android:windowSharedElementEnterTransition">@android:transition/move</item>
         <item name="android:windowSharedElementExitTransition">@android:transition/move</item>
+        <item name="material_drawer_background">@color/material_drawer_background</item>
+        <item name="material_drawer_primary_text">@color/material_drawer_primary_text</item>
+        <item name="material_drawer_selected_text">@color/material_red</item>
+        <item name="material_drawer_divider">@color/divider</item>
+        <item name="material_drawer_selected">@color/drawer_selected</item>
+        <item name="material_drawer_secondary_text">@color/material_drawer_primary_text</item>
     </style>
 
     <style name="AppTheme.DetailActivity" parent="MaterialDrawerTheme.TranslucentStatus">
